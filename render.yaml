@@ -1,0 +1,5 @@
+services:
+  - type: worker
+    name: noun-o-clock
+    env: docker
+    branch: main
