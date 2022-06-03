@@ -3,3 +3,10 @@ services:
     name: noun-o-clock
     env: docker
     branch: main
+    envVars:
+      - key: CLOUDINARY_URL
+        sync: false
+      - key: W3_WS_PROVIDER_URL
+        sync: false
+      - key: NS_WEBHOOK_URL
+        sync: false

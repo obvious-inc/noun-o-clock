@@ -86,7 +86,7 @@ def main():
     new_auction_filter = auction_house_contract.events.AuctionCreated.createFilter(fromBlock="latest")
     loop = asyncio.get_event_loop()
     try:
-        print("Listening to contract events...")
+        logger.info("Listening to contract events...")
         loop.run_until_complete(asyncio.gather(log_loop(new_auction_filter, settings.POLL_INTERVAL_SECONDS)))
     finally:
         loop.close()
