@@ -52,6 +52,7 @@ SUBSCRIPTIONS = [
 
 auction_end = None
 auction_timer = None
+past_bids = set()
 
 
 async def handle_new_auction_event(noun_id: str):
@@ -130,8 +131,10 @@ async def process_pending_transaction(tx: dict):
 
 
 async def process_new_bid(tx: dict, pending: bool = False):
+    tx_hash = tx.get("hash")
     bidder = tx.get("from")
     value = tx.get("value")
+
     if value:
         amount = Web3.fromWei(Web3.toInt(hexstr=value), "ether")
     else:
@@ -142,8 +145,13 @@ async def process_new_bid(tx: dict, pending: bool = False):
     logger.info(f"> new bid of Ξ{amount:.2f} from {bidder} {'(pending)' if pending else ''}")
 
     if not pending:
+        if tx_hash in past_bids:
+            logger.warning(f"already saw transaction {tx_hash}")
+            return
+
         await new_bid_message(amount, bidder)
         await update_current_auction()
+        past_bids.add(tx_hash)
 
 
 async def process_message(message: dict, subs: dict):
