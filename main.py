@@ -131,7 +131,7 @@ async def process_pending_transaction(tx: dict):
 
 
 async def process_new_bid(tx: dict, pending: bool = False):
-    tx_hash = tx.get("hash")
+    tx_hash = tx.get("transactionHash")
     bidder = tx.get("from")
     value = tx.get("value")
 
