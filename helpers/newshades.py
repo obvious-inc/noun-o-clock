@@ -94,9 +94,14 @@ async def create_new_auction_message(noun_id: str, image_url: str):
                 "children": [{"type": "image-attachment", "url": image_url, "width": 320, "height": 320}],
             },
             {
-                "type": "link",
-                "url": f"https://nouns.wtf/noun/{noun_id}",
-                "children": [{"text": f"https://nouns.wtf/noun/{noun_id}"}],
+                "type": "paragraph",
+                "children": [
+                    {
+                        "type": "link",
+                        "url": f"https://nouns.wtf/noun/{noun_id}",
+                        "children": [{"text": f"https://nouns.wtf/noun/{noun_id}"}],
+                    }
+                ],
             },
         ],
     }
