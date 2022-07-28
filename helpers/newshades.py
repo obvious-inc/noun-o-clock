@@ -81,7 +81,7 @@ async def create_new_auction_message(noun_id: str, image_url: str):
         },
         {
             "type": "paragraph",
-            "children": [{"text": f"Nouns {noun_id} has just been minted, let the games begin!"}],
+            "children": [{"text": f"Noun {noun_id} has just been minted, let the games begin!"}],
         },
     ]
     new_auction_message = random.choice(new_auction_choices)
