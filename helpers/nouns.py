@@ -1,5 +1,6 @@
 import base64
 import json
+from datetime import datetime
 
 import settings
 from helpers.w3 import get_contract
@@ -25,3 +26,11 @@ async def get_current_auction():
         "bidder": bidder,
         "settled": settled,
     }
+
+
+async def get_curr_auction_remaining_seconds():
+    auction = await get_current_auction()
+    end_time = auction.get("end_time")
+    end_date = datetime.fromtimestamp(end_time)
+    seconds_remaining = int((end_date - datetime.now()).total_seconds())
+    return seconds_remaining
