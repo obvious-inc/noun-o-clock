@@ -215,7 +215,7 @@ async def noun_listener(queue: Queue):
 
             retries += 1
             backoff = max(3, min(60, 2**retries))
-            logger.info(f"Connection to websocket was closed, retry in {backoff} seconds.")
+            logger.info(f"Connection to websocket was closed, retry in {backoff} seconds. ({retries} attempts)")
             await asyncio.sleep(backoff)
         except CancelledError:
             return
