@@ -28,6 +28,11 @@ async def get_current_auction():
     }
 
 
+async def get_current_noun_id():
+    curr_auction = await get_current_auction()
+    return curr_auction.get("noun_id", None)
+
+
 async def get_curr_auction_remaining_seconds():
     auction = await get_current_auction()
     end_time = auction.get("end_time")

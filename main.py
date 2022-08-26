@@ -13,7 +13,13 @@ from websockets.exceptions import ConnectionClosedError
 import settings
 from helpers.cloudinary import upload_image
 from helpers.newshades import create_finalized_auction_message, create_new_auction_message, new_bid_message
-from helpers.nouns import get_curr_auction_remaining_seconds, get_current_auction, get_noun_metadata
+from helpers.nounoclock import get_bid_notes
+from helpers.nouns import (
+    get_curr_auction_remaining_seconds,
+    get_current_auction,
+    get_current_noun_id,
+    get_noun_metadata,
+)
 from helpers.timer import AsyncTimer
 from helpers.w3 import get_contract
 
@@ -135,10 +141,12 @@ async def process_new_bid(tx: dict, pending: bool = False):
     value = tx.get("value")
 
     if value:
+        weth_amount = value
         amount = Web3.fromWei(Web3.toInt(hexstr=value), "ether")
     else:
         transaction = w3_client.eth.getTransaction(tx.get("transactionHash"))
-        amount = Web3.fromWei(transaction.get("value"), "ether")
+        weth_amount = transaction.get("value")
+        amount = Web3.fromWei(weth_amount, "ether")
         bidder = transaction.get("from")
 
     logger.info(f"> new bid of Ξ{amount:.2f} from {bidder} {'(pending)' if pending else ''}")
@@ -148,7 +156,14 @@ async def process_new_bid(tx: dict, pending: bool = False):
             logger.warning(f"already saw transaction {tx_hash}")
             return
 
-        await new_bid_message(amount, bidder)
+        try:
+            noun_id = str(await get_current_noun_id())
+            bid_note = await get_bid_notes(noun_id=noun_id, bidder_address=bidder, bidder_weth=weth_amount)
+        except Exception as e:
+            logger.warning("issue fetching bid notes", e)
+            bid_note = None
+
+        await new_bid_message(amount, bidder, bid_note=bid_note)
         past_bids.add(tx_hash)
 
 
@@ -188,7 +203,12 @@ async def create_subscriptions(ws_client) -> dict:
 async def consumer(queue):
     while True:
         task = await queue.get()
-        await process_message(task.get("message"), subs=task.get("subs"))
+        try:
+            await process_message(task.get("message"), subs=task.get("subs"))
+        except Exception as e:
+            logger.warning(f"problems handling {task}: {e}. sleeping and trying again")
+            await asyncio.sleep(3)
+            await queue.put({"message": task.get("message"), "subs": task.get("subs")})
 
 
 async def noun_listener(queue: Queue):
