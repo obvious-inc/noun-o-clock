@@ -18,8 +18,10 @@ async def get_bid_notes(noun_id, bidder_address, bidder_weth) -> Optional[str]:
                 response.raise_for_status()
 
             json_resp = await response.json()
-            logger.info(f"noun-o-clock app response: {json_resp}")
             note_id = f"{noun_id}-{bidder_address.lower()}-{bidder_weth}"
 
             note = json_resp.get(note_id, None)
+            if note:
+                logger.info(f"noun-o-clock app note: {note}")
+
             return note

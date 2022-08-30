@@ -20,6 +20,7 @@ from helpers.nouns import (
     get_current_noun_id,
     get_noun_metadata,
 )
+from helpers.subgraph import NounsSubgraphClient
 from helpers.timer import AsyncTimer
 from helpers.w3 import get_contract
 
@@ -144,10 +145,19 @@ async def process_new_bid(tx: dict, pending: bool = False):
         weth_amount = value
         amount = Web3.fromWei(Web3.toInt(hexstr=value), "ether")
     else:
-        transaction = w3_client.eth.getTransaction(tx.get("transactionHash"))
+        transaction = w3_client.eth.getTransaction(tx_hash)
         weth_amount = transaction.get("value")
         amount = Web3.fromWei(weth_amount, "ether")
         bidder = transaction.get("from")
+
+    if not amount or amount == 0:
+        bid = await NounsSubgraphClient().get_bid(tx_hash)
+        if not bid:
+            logger.warning(f"couldn't find info on transaction: {tx_hash}. ignoring bid...")
+            return
+
+        weth_amount = int(bid.get("amount", "0"))
+        amount = Web3.fromWei(weth_amount, "ether")
 
     logger.info(f"> new bid of Ξ{amount:.2f} from {bidder} {'(pending)' if pending else ''}")
 
