@@ -145,3 +145,16 @@ async def new_bid_message(amount, bidder, bid_note=None):
 
     data = {"blocks": blocks}
     await create_message(data)
+
+
+async def new_pending_bid_message(amount, bidder):
+    bidder = await get_wallet_short_name(address=bidder)
+    blocks = [
+        {
+            "type": "paragraph",
+            "children": [{"italic": True, "text": f"pending Ξ{amount:.2f} bid from {bidder}..."}],
+        }
+    ]
+
+    data = {"blocks": blocks}
+    await create_message(data)

@@ -12,7 +12,12 @@ from websockets.exceptions import ConnectionClosedError
 
 import settings
 from helpers.cloudinary import upload_image
-from helpers.newshades import create_finalized_auction_message, create_new_auction_message, new_bid_message
+from helpers.newshades import (
+    create_finalized_auction_message,
+    create_new_auction_message,
+    new_bid_message,
+    new_pending_bid_message,
+)
 from helpers.nounoclock import get_bid_notes
 from helpers.nouns import (
     get_curr_auction_remaining_seconds,
@@ -175,6 +180,8 @@ async def process_new_bid(tx: dict, pending: bool = False):
 
         await new_bid_message(amount, bidder, bid_note=bid_note)
         past_bids.add(tx_hash)
+    else:
+        await new_pending_bid_message(amount, bidder)
 
 
 async def process_message(message: dict, subs: dict):
