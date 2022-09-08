@@ -34,6 +34,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 NO_CONSUMERS = 5
+PENDING_BID_THRESHOLD_SECONDS = 1_800
 auction_timer: AsyncTimer = AsyncTimer()
 
 w3_client = Web3(Web3.WebsocketProvider(settings.W3_WS_PROVIDER_URL))
@@ -181,7 +182,10 @@ async def process_new_bid(tx: dict, pending: bool = False):
         await new_bid_message(amount, bidder, bid_note=bid_note)
         past_bids.add(tx_hash)
     else:
-        await new_pending_bid_message(amount, bidder)
+        # check within 30 mins of auction end
+        remaining_seconds = await get_curr_auction_remaining_seconds()
+        if remaining_seconds < PENDING_BID_THRESHOLD_SECONDS:
+            await new_pending_bid_message(amount, bidder)
 
 
 async def process_message(message: dict, subs: dict):
