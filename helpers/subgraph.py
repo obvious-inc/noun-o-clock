@@ -27,3 +27,18 @@ class NounsSubgraphClient:
 
             result = await session.execute(query, variable_values={"id": transaction_hash})
             return result.get("bid")
+
+    async def get_holding_nouns(self, wallet_address: str):
+        async with self.client as session:
+            query = gql(
+                """
+                query Nouns ($owner: String) {
+                  nouns(where: {owner: $owner}) {
+                    id
+                  }
+                }
+                """
+            )
+
+            result = await session.execute(query, variable_values={"owner": wallet_address})
+            return result.get("nouns")

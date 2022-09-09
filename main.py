@@ -27,7 +27,7 @@ from helpers.nouns import (
 )
 from helpers.subgraph import NounsSubgraphClient
 from helpers.timer import AsyncTimer
-from helpers.w3 import get_contract
+from helpers.w3 import get_contract, get_wallet_balance
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -35,6 +35,8 @@ logger.setLevel(logging.DEBUG)
 
 NO_CONSUMERS = 5
 PENDING_BID_THRESHOLD_SECONDS = 1_800
+SERIOUS_BID_THRESHOLD_ETH = 50
+
 auction_timer: AsyncTimer = AsyncTimer()
 
 w3_client = Web3(Web3.WebsocketProvider(settings.W3_WS_PROVIDER_URL))
@@ -179,7 +181,22 @@ async def process_new_bid(tx: dict, pending: bool = False):
             logger.warning("issue fetching bid notes", e)
             bid_note = None
 
-        await new_bid_message(amount, bidder, bid_note=bid_note)
+        stats_text = None
+        if amount > SERIOUS_BID_THRESHOLD_ETH:
+            try:
+                holding_nouns = len(await NounsSubgraphClient().get_holding_nouns(bidder.lower()))
+                wallet_weth_balance = await get_wallet_balance(bidder)
+                wallet_balance = Web3.fromWei(wallet_weth_balance, "ether")
+
+                stats_text = f"Ξ{wallet_balance:.2f} left in wallet"
+
+                if holding_nouns > 0:
+                    stats_text = f"{holding_nouns} noun(s) and " + stats_text
+            except Exception as e:
+                logger.warning(f"issue fetching stats: {e}")
+                stats_text = None
+
+        await new_bid_message(amount, bidder, bid_note=bid_note, stats_text=stats_text)
         past_bids.add(tx_hash)
     else:
         # check within 30 mins of auction end

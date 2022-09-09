@@ -33,3 +33,8 @@ async def get_wallet_short_name(address: str, check_ens: bool = True) -> str:
             pass
 
     return short_address
+
+
+async def get_wallet_balance(wallet_address: str):
+    wallet_address = Web3.toChecksumAddress(wallet_address)
+    return w3_client.eth.get_balance(wallet_address)

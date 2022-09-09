@@ -108,7 +108,7 @@ async def create_new_auction_message(noun_id: str, image_url: str):
     await create_message(data)
 
 
-async def new_bid_message(amount, bidder, bid_note=None):
+async def new_bid_message(amount, bidder, bid_note=None, stats_text=None):
     bidder = await get_wallet_short_name(address=bidder)
     bid_message_choices = [
         [
@@ -125,10 +125,15 @@ async def new_bid_message(amount, bidder, bid_note=None):
         ],
     ]
 
+    bid_message = random.choice(bid_message_choices)
+
+    if stats_text and stats_text != "":
+        bid_message.append({"text": f"\n[{stats_text}]", "italic": True})
+
     blocks = [
         {
             "type": "paragraph",
-            "children": random.choice(bid_message_choices),
+            "children": bid_message,
         }
     ]
 
