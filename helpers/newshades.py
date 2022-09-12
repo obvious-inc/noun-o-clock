@@ -163,3 +163,19 @@ async def new_pending_bid_message(amount, bidder):
 
     data = {"blocks": blocks}
     await create_message(data)
+
+
+async def new_pending_settlement_message(settler):
+    settler = await get_wallet_short_name(address=settler)
+    blocks = [
+        {
+            "type": "paragraph",
+            "children": [
+                {"italic": True, "text": f"{settler} is trying to manually settle the auction!"},
+                {"text": " 🚨 rug alert 🚨"},
+            ],
+        }
+    ]
+
+    data = {"blocks": blocks}
+    await create_message(data)

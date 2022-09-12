@@ -17,6 +17,7 @@ from helpers.newshades import (
     create_new_auction_message,
     new_bid_message,
     new_pending_bid_message,
+    new_pending_settlement_message,
 )
 from helpers.nounoclock import get_bid_notes
 from helpers.nouns import (
@@ -36,6 +37,7 @@ logger.setLevel(logging.DEBUG)
 NO_CONSUMERS = 5
 PENDING_BID_THRESHOLD_SECONDS = 1_800
 SERIOUS_BID_THRESHOLD_ETH = 50
+FOMO_SETTLER_CONTRACT_ADDRESS = "0xb2341612271e122ff20905c9e389c3d7f0F222a1"
 
 auction_timer: AsyncTimer = AsyncTimer()
 
@@ -125,6 +127,7 @@ async def process_pending_transaction(tx: dict):
     str_func = func.function_identifier
     if str_func == "settleCurrentAndCreateNewAuction":
         logger.info("> pending transaction for settleCurrentAndCreateNewAuction")
+        await process_pending_settlement(tx)
     elif str_func == "createBid":
         await process_new_bid(tx, pending=True)
     else:
@@ -203,6 +206,16 @@ async def process_new_bid(tx: dict, pending: bool = False):
         remaining_seconds = await get_curr_auction_remaining_seconds()
         if remaining_seconds < PENDING_BID_THRESHOLD_SECONDS:
             await new_pending_bid_message(amount, bidder)
+
+
+async def process_pending_settlement(tx: dict):
+    settler = tx.get("from")
+    if settler.lower() == FOMO_SETTLER_CONTRACT_ADDRESS.lower():
+        logger.info(f"> FOMO nouns trying to settle auction")
+        return
+
+    logger.info(f"> new attempt to manually settle auction from {settler}")
+    await new_pending_settlement_message(settler=settler)
 
 
 async def process_message(message: dict, subs: dict):
