@@ -147,6 +147,21 @@ async def handle_auction_end():
         logger.info(f"created new timer for {seconds_remaining} seconds.")
 
 
+async def _get_subgraph_bid(tx_hash):
+    retries = 0
+    while retries < 3:
+        bid = await NounsSubgraphClient().get_bid(tx_hash)
+        if not bid:
+            logger.debug(f"couldn't find transaction: {tx_hash}. retrying in 3s...")
+            retries += 1
+            await asyncio.sleep(3)
+            continue
+
+        return bid
+
+    return None
+
+
 async def process_new_bid(tx: dict, pending: bool = False):
     tx_hash = tx.get("transactionHash")
     bidder = tx.get("from")
@@ -162,7 +177,7 @@ async def process_new_bid(tx: dict, pending: bool = False):
         bidder = transaction.get("from")
 
     if not amount or amount == 0:
-        bid = await NounsSubgraphClient().get_bid(tx_hash)
+        bid = await _get_subgraph_bid(tx_hash)
         if not bid:
             logger.warning(f"couldn't find info on transaction: {tx_hash}. ignoring bid...")
             return
