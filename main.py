@@ -126,8 +126,8 @@ async def process_pending_transaction(tx: dict):
     func, args = contract.decode_function_input(tx.get("input"))
     str_func = func.function_identifier
     if str_func == "settleCurrentAndCreateNewAuction":
-        logger.info("> pending transaction for settleCurrentAndCreateNewAuction")
-        await process_pending_settlement(tx)
+        logger.info("> pending transaction for settleCurrentAndCreateNewAuction. ignore...")
+        # await process_pending_settlement(tx)
     elif str_func == "createBid":
         await process_new_bid(tx, pending=True)
     else:
