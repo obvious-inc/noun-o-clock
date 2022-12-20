@@ -24,7 +24,7 @@ def get_ens_primary_name_for_address(wallet_address: str) -> str:
 
 async def get_wallet_short_name(address: str, check_ens: bool = True) -> str:
     address = Web3.toChecksumAddress(address)
-    short_address = f"{address[:5]}...{address[-3:]}"
+    short_address = f"{address[:5]}...{address[-4:]}"
     if check_ens:
         try:
             ens_name = get_ens_primary_name_for_address(address)
